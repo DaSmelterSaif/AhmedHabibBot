@@ -9,3 +9,5 @@ def handle_response(message) -> str:
     
     if p_message == "!help":
         return "no"
+    if p_message == "please":
+        return "no"
