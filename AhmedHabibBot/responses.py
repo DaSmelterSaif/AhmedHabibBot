@@ -3,11 +3,11 @@ def handle_response(message) -> str:
     
     if p_message == "Ahmed":
         return "Hi"
-    
-    if p_message == "It's Ahmed":
+    elif p_message == "It's Ahmed":
         return "Ayo"
-    
-    if p_message == "!help":
+    elif p_message == "!help":
         return "no"
-    if p_message == "please":
+    elif p_message == "please":
         return "no"
+    else:
+        return ""

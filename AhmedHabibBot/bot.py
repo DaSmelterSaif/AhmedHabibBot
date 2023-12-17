@@ -4,41 +4,27 @@ import responses
 
 import TOKEN
 
-async def send_message(message, user_message, is_private):
-    try:
-        response = responses.handle_response(user_message)
-        await message.author.send(response) if is_private else await message.channel.send(response)
-    except Exception as e:
-        print(e)
-        
-def run_discord_bot():
-    
-    intents = discord.Intents.default()
-    client = discord.Client(intents = intents)
-    intents.message_content = True
-    
-    #Bot is running
-    @client.event
-    async def on_ready():
-        print(f"{client.user} is now running!")
-        
+intents = discord.Intents.default()
+intents.message_content = True
 
-    #When message is sent
-    @client.event
-    async def on_message(message):
-        if message.author == client.user:
-            return 
-        
-        username = str(message.author)
-        user_message = str(message.content)
-        channel = str(message.channel)
-        
-        print(f"{username} said: '{user_message}' ({channel})")
-        
-        if user_message[0] == '?':
-            user_message = user_message[1:]
-            await send_message(message, user_message, is_private=True)
-        else:
-            await send_message(message, user_message, is_private=False)
+client = discord.Client(intents=intents)
 
-    client.run(TOKEN.TOKEN)
+@client.event
+async def on_ready():
+    print(f"Logged on as {client.user}")
+        
+@client.event
+async def on_message(message):
+    
+    user_msg = message.content
+    
+    print(f"Message from {message.author}: {user_msg}")
+        
+    if message.author == client.user:
+        return
+    
+    response = responses.handle_response(user_msg)
+    if len(response) != 0:
+        await message.channel.send(response)
+        
+client.run(TOKEN.TOKEN)
