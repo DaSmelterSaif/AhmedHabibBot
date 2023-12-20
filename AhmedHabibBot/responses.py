@@ -9,5 +9,7 @@ def handle_response(message) -> str:
         return "no"
     elif p_message == "please":
         return "no"
+    elif p_message == "!tictactoe":
+        pass
     else:
         return ""
