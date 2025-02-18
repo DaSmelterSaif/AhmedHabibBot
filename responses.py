@@ -1,3 +1,5 @@
+import tictactoe
+
 def handle_response(message) -> str:
     p_message = message.lower()
     
@@ -10,6 +12,7 @@ def handle_response(message) -> str:
     elif p_message == "please":
         return "no"
     elif p_message == "!tictactoe":
+        # tictactoe.startGame(message.author, client)
         pass
     else:
         return ""

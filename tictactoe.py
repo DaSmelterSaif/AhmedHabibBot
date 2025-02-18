@@ -2,6 +2,8 @@ from random import randint
 
 import asyncio
 
+# TODO - Figure out how to integrate this with the responses.py file.
+
 # Tuples used for checking input validity.
 columns = ('a', 'b', 'c')
 rows = (1, 2, 3)
@@ -22,8 +24,10 @@ def startGame(messagerName, bot):
     while playing:
         if turn == 0:
             playerTurn(grid, playerName, bot)
+            turn = 1
         else:
-            botTurn(grid)
+            botTurn(grid, bot)
+            turn = 0
     else:
         return
 
@@ -48,33 +52,35 @@ async def playerTurn(grid, playerName, bot):
         return m.author == playerName
 
     # TODO - Test the game so far.
-    # TODO - Add a timeout action.
     # Checks for the validity of the syntax of 'playerInput'.
     # The syntax should be a letter ('a', 'b', 'c') followed by a number (1, 2, 3).
     # Ex: a1 b3 c2.
     try:
         playerInput = await bot.wait_for("message", check=check, timeout=timeout)
         while (len(playerInput) != 2 and
-                    playerInput[0] not in columns and
-                    int(playerInput[1]) not in rows):
+                playerInput[0] not in columns and
+                int(playerInput[1]) not in rows):
             playerInput = await bot.wait_for("message", check=check, timeout=timeout)
-            #Invalid syntax. The player's turn is repeated.
-            
-        # After the syntax is validated, the syntax is translated to list indexes.
-        r = 3 - int(playerInput[1])
-        c = rows[columns.index(playerInput[0])] - 1
-        
-        # Checks if the picked slot poisition is already taken.
-        while grid[r][c] != "":
-            playerInput = await bot.wait_for("message", check=check, timeout=timeout)
+            # After the syntax is validated, the syntax is translated to list indexes.
+            r = 3 - int(playerInput[1])
+            c = rows[columns.index(playerInput[0])] - 1
+
+            # Repeats the loop if the slot is already taken.
+            if grid[r][c] != "":
+                continue
+            else:
+                grid[r][c] = "X"
+
     except asyncio.TimeoutError:
         print("Tic-tac-toe timeout.")
         await bot.send("You have taken too long to make a move. The game has ended.")
+        playing = False
     
 
 # The bot's turn.
-def botTurn(grid):
-    pass
+async def botTurn(grid, bot):
+    await bot.send(printGrid(grid))
+    await bot.send("Note: The bot's turn is not yet implemented.")
 
 # TODO - Fix the playing is not defined error.
 # Should the bot or the player start first?
