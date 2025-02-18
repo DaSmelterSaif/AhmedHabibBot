@@ -8,7 +8,7 @@ import asyncio
 columns = ('a', 'b', 'c')
 rows = (1, 2, 3)
 
-def startGame(messagerName, bot):
+async def startGame(messagerName, bot, channel):
     # Ends the game when False.
     playing = True
 
@@ -23,12 +23,15 @@ def startGame(messagerName, bot):
 
     while playing:
         if turn == 0:
-            playerTurn(grid, playerName, bot)
+            await channel.send(f"Your turn, {playerName}.")
+            playing = await playerTurn(grid, playerName, bot, channel, playing)
             turn = 1
         else:
-            botTurn(grid, bot)
+            await channel.send("My turn.")
+            playing = await botTurn(grid, channel, playing)
             turn = 0
     else:
+        await channel.send("The game has ended.")
         return
 
 
@@ -43,9 +46,9 @@ def printGrid(g):
     "a\tb\tc"
 
 # The player's turn
-async def playerTurn(grid, playerName, bot):
+async def playerTurn(grid, playerName, bot, channel, playing):
     # How long before the game ends if the player doesn't make a move.
-    timeout = 120
+    timeout = 10
 
     # TODO - Check if the channel is the same as the one the game started in.
     def check(m):
@@ -55,32 +58,36 @@ async def playerTurn(grid, playerName, bot):
     # Checks for the validity of the syntax of 'playerInput'.
     # The syntax should be a letter ('a', 'b', 'c') followed by a number (1, 2, 3).
     # Ex: a1 b3 c2.
-    try:
-        playerInput = await bot.wait_for("message", check=check, timeout=timeout)
-        while (len(playerInput) != 2 and
-                playerInput[0] not in columns and
-                int(playerInput[1]) not in rows):
+    while True:
+        try:
             playerInput = await bot.wait_for("message", check=check, timeout=timeout)
-            # After the syntax is validated, the syntax is translated to list indexes.
-            r = 3 - int(playerInput[1])
-            c = rows[columns.index(playerInput[0])] - 1
+            playerInput = playerInput.content.strip().lower()
+            if (len(playerInput) == 2 and
+                    playerInput[0] in columns and
+                    int(playerInput[1]) in rows):
+                # After the syntax is validated, the syntax is translated to list indexes.
+                r = 3 - int(playerInput[1])
+                c = rows[columns.index(playerInput[0])] - 1
 
-            # Repeats the loop if the slot is already taken.
-            if grid[r][c] != "":
-                continue
-            else:
-                grid[r][c] = "X"
+                # Checks if the spot is already taken.
+                if grid[r][c] == "":
+                    grid[r][c] = "X"
+                    break
+                else:
+                    await channel.send("That spot is already taken.")
 
-    except asyncio.TimeoutError:
-        print("Tic-tac-toe timeout.")
-        await bot.send("You have taken too long to make a move. The game has ended.")
-        playing = False
+        except asyncio.TimeoutError:
+            await channel.send("You have taken too long to make a move. The game has ended.")
+            playing = False
+            break
+    return playing
     
 
 # The bot's turn.
-async def botTurn(grid, bot):
-    await bot.send(printGrid(grid))
-    await bot.send("Note: The bot's turn is not yet implemented.")
+async def botTurn(grid, channel, playing):
+    await channel.send(printGrid(grid))
+    await channel.send("Note: The bot's turn is not yet implemented.")
+    return playing
 
 # TODO - Fix the playing is not defined error.
 # Should the bot or the player start first?
