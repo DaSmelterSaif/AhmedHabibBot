@@ -3,6 +3,7 @@ import responses
 import tictactoe
 from TOKEN import TOKEN
 
+
 # TODO - Fix the bot not responding to messages.
 ### This file is the run file, for now... ###
 intents = discord.Intents.default()
@@ -30,5 +31,6 @@ async def on_message(message):
         response = responses.handle_response(user_msg)
         if len(response) != 0:
             await message.channel.send(response)
-        
-client.run(TOKEN)
+            
+def run_discord_bot():
+    client.run(TOKEN)
