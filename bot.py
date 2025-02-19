@@ -3,9 +3,6 @@ import responses
 import tictactoe
 from TOKEN import TOKEN
 
-
-# TODO - Fix the bot not responding to messages.
-### This file is the run file, for now... ###
 intents = discord.Intents.default()
 intents.message_content = True
 

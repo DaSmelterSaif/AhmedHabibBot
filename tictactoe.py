@@ -53,8 +53,7 @@ async def playerTurn(grid, playerName, bot, channel, playing):
     # TODO - Check if the channel is the same as the one the game started in.
     def check(m):
         return m.author == playerName
-
-    # TODO - Test the game so far.
+    
     # Checks for the validity of the syntax of 'playerInput'.
     # The syntax should be a letter ('a', 'b', 'c') followed by a number (1, 2, 3).
     # Ex: a1 b3 c2.
