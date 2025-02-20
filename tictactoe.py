@@ -37,13 +37,19 @@ async def startGame(messagerName, bot, channel):
 
 # TODO - Combine printGrid with formatGrid.
 # Returns the grid 'g'.
-def printGrid(g):
-    return f"{g[0][0]}|{g[0][1]}|{g[0][2]}  3"\
-    "________________________"\
-    f"{g[1][0]}|{g[1][1]}|{g[1][2]}  2"\
-    "________________________"\
-    f"{g[2][0]}|{g[2][1]}|{g[2][2]}  1"\
-    "a\tb\tc"
+def formattedGrid(g):
+    g_copy = g.copy()
+    for row in range(len(g_copy)):
+        for col in range(len(g_copy[row])):
+            if g_copy[row][col] == "":
+                g_copy[row][col] = " "
+
+    return f"```3 {g_copy[0][0]}|{g_copy[0][1]}|{g_copy[0][2]}\n"\
+    " __.__.__\n"\
+    f"2 {g_copy[1][0]}|{g_copy[1][1]}|{g_copy[1][2]}\n"\
+    " __.__.__\n"\
+    f"1 {g_copy[2][0]}|{g_copy[2][1]}|{g_copy[2][2]}\n"\
+    "  a b c```"
 
 # The player's turn
 async def playerTurn(grid, playerName, bot, channel, playing):
@@ -69,7 +75,7 @@ async def playerTurn(grid, playerName, bot, channel, playing):
                 c = rows[columns.index(playerInput[0])] - 1
 
                 # Checks if the spot is already taken.
-                if grid[r][c] == "":
+                if grid[r][c].strip() == "":
                     grid[r][c] = "X"
                     break
                 else:
@@ -84,7 +90,7 @@ async def playerTurn(grid, playerName, bot, channel, playing):
 
 # The bot's turn.
 async def botTurn(grid, channel, playing):
-    await channel.send(printGrid(grid))
+    await channel.send(formattedGrid(grid))
     await channel.send("Note: The bot's turn is not yet implemented.")
     return playing
 
@@ -102,6 +108,3 @@ async def botTurn(grid, channel, playing):
 #         while playing:
 #             playerTurn()
 #             botTurn()
-
-# def formatGrid(g):
-#     pass
