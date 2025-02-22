@@ -2,8 +2,6 @@ from random import randint
 
 import asyncio
 
-# TODO - Figure out how to integrate this with the responses.py file.
-
 # Tuples used for checking input validity.
 columns = ('a', 'b', 'c')
 rows = (1, 2, 3)
@@ -14,6 +12,8 @@ async def startGame(messagerName, bot, channel):
 
     playerName = messagerName
 
+    # TODO - Randomize X and O for the player and the bot.
+
     # The tic tac toe grid that will be edited by the players.
     grid = [["","",""],
             ["","",""],
@@ -21,7 +21,10 @@ async def startGame(messagerName, bot, channel):
 
     turn = randint(0, 1) # 0 - player, 1 - bot
 
+    # Game loop.
     while playing:
+        # TODO - Add a function to check for a win in the grid.
+
         if turn == 0:
             await channel.send(f"Your turn, {playerName}.")
             playing = await playerTurn(grid, playerName, bot, channel, playing)
@@ -34,11 +37,9 @@ async def startGame(messagerName, bot, channel):
         await channel.send("The game has ended.")
         return
 
-
-# TODO - Combine printGrid with formatGrid.
-# Returns the grid 'g'.
 def formattedGrid(g):
     g_copy = g.copy()
+    # Adds spaces " " to empty spots on the grid.
     for row in range(len(g_copy)):
         for col in range(len(g_copy[row])):
             if g_copy[row][col] == "":
@@ -51,9 +52,7 @@ def formattedGrid(g):
     f"1 {g_copy[2][0]}|{g_copy[2][1]}|{g_copy[2][2]}\n"\
     "  a b c```"
 
-# The player's turn
 async def playerTurn(grid, playerName, bot, channel, playing):
-    # How long before the game ends if the player doesn't make a move.
     timeout = 10
 
     # TODO - Check if the channel is the same as the one the game started in.
@@ -67,44 +66,43 @@ async def playerTurn(grid, playerName, bot, channel, playing):
         try:
             playerInput = await bot.wait_for("message", check=check, timeout=timeout)
             playerInput = playerInput.content.strip().lower()
+
+            # Checks if the syntax is valid.
             if (len(playerInput) == 2 and
                     playerInput[0] in columns and
                     int(playerInput[1]) in rows):
-                # After the syntax is validated, the syntax is translated to list indexes.
+                
+                # If the syntax is valid, it gets translated to list indexes.
                 r = 3 - int(playerInput[1])
                 c = rows[columns.index(playerInput[0])] - 1
 
                 # Checks if the spot is already taken.
                 if grid[r][c].strip() == "":
+                    # The player takes the spot.
                     grid[r][c] = "X"
+                    await channel.send(formattedGrid(grid))
                     break
                 else:
                     await channel.send("That spot is already taken.")
+
+            # If no break statements are reached, the player is prompted to try again
+            # and another "timeout" seconds are given.
 
         except asyncio.TimeoutError:
             await channel.send("You have taken too long to make a move. The game has ended.")
             playing = False
             break
+
     return playing
-    
+
+def findBestMove(grid):
+    return grid
 
 # The bot's turn.
 async def botTurn(grid, channel, playing):
-    await channel.send(formattedGrid(grid))
+    await channel.send(formattedGrid(findBestMove(grid)))
     await channel.send("Note: The bot's turn is not yet implemented.")
+
+    # TODO - Implement the bot's turn using findBestMove.
+
     return playing
-
-# TODO - Fix the playing is not defined error.
-# Should the bot or the player start first?
-
-# def botOrPlayer(a):
-#     if a == True:
-#         # Keeps the game running until the condition is false
-#         # (Player wins, bot wins, or draw).
-#         while playing:
-#             botTurn()
-#             playerTurn()
-#     else:
-#         while playing:
-#             playerTurn()
-#             botTurn()
