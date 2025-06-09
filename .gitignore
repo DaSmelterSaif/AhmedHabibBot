@@ -1,4 +1,4 @@
 ﻿TOKEN.py
 env/
-env_laptop/
+venv/
 __pycache__/
