@@ -2,6 +2,7 @@ from random import randint
 import asyncio
 from configparser import ConfigParser
 import os
+import copy
 
 # ConfigParser.
 config = ConfigParser()
@@ -40,6 +41,8 @@ async def startGame(playerName, bot, channel):
         if turn == 0:
             await channel.send(f"Your turn, {playerName}.")
             ranOutOfTime = await playerTurn(grid, playerName, bot, channel)
+            if ranOutOfTime:
+                return
             if gameWon(grid):
                 await printWinner(playerName)
                 return
@@ -58,7 +61,7 @@ async def startGame(playerName, bot, channel):
 
 def formattedGrid(g):
     """Formats the grid for display in Discord."""
-    g_copy = g.copy()
+    g_copy = copy.deepcopy(g)
     # Adds spaces " " to empty spots on the grid.
     for row in range(len(g_copy)):
         for col in range(len(g_copy[row])):
@@ -76,61 +79,77 @@ def gameWon(grid):
     """Checks if the game is won by either player."""
     
     # Check rows
-    for row in grid:
-        if grid[row][0] == grid[row][1] == grid[row][2] and grid[row][0] != "":
+    for row in range(3):
+        if (grid[row][0] == grid[row][1] == grid[row][2]) and grid[row][0] != "":
             return True
         
     # Check columns
     for col in range(3):
-        if grid[0][col] == grid[1][col] == grid[2][col] and grid[0][col] != "":
+        if (grid[0][col] == grid[1][col] == grid[2][col]) and grid[0][col] != "":
+            print(2) # Debugging line
             return True
         
     # Check diagonals
     if grid[0][0] == grid[1][1] == grid[2][2] and grid[0][0] != "":
+        print(3)  # Debugging line
         return True
     if grid[0][2] == grid[1][1] == grid[2][0] and grid[0][2] != "":
+        print(4)  # Debugging line
         return True
     
     return False
 
 async def playerTurn(grid, playerName, bot, channel):
-    # TODO - Check if the channel is the same as the one the game started in.
     def check(m):
         """Checks if the message sent is from the player who started the game."""
-        return m.author == playerName
+        return m.author == playerName and m.channel == channel
     
-    # Checks for the validity of the syntax of 'playerInput'.
-    # The syntax should be a letter ('a', 'b', 'c') followed by a number (1, 2, 3).
-    # Ex: a1 b3 c2.
+    def playerInputValid(playerInput):
+        """Checks if the input is valid."""
+        if len(playerInput) != 2 or playerInput[0] not in columns or int(playerInput[1]) not in rows:
+            return False
+        
+        return True
+    
+    def playerInputToGridIndex(playerInput):
+        """Converts the player input to grid index."""
+        r = 3 - int(playerInput[1])  # Converts row to index (1 -> 2, 2 -> 1, 3 -> 0)
+        c = rows[columns.index(playerInput[0])] - 1 # Converts column to index (a -> 0, b -> 1, c -> 2)
+        return r, c
+
+    def spotTaken(grid, row, col):
+        if grid[row][col].strip() == "":
+            # The player takes the spot.
+            return False
+        return True
+    
+    # Player's turn repeats until the player inputs a valid input or times out.
     while True:
         try:
-            playerInput = await bot.wait_for("message", check=check, timeout=timeout)
+            playerInput = await bot.wait_for("message", timeout=timeout, check=check)
             playerInput = playerInput.content.strip().lower()
 
-            # Checks if the syntax is valid.
-            if (len(playerInput) == 2 and
-                    playerInput[0] in columns and
-                    int(playerInput[1]) in rows):
-                
-                # If the syntax is valid, it gets translated to list indices.
-                r = 3 - int(playerInput[1])
-                c = rows[columns.index(playerInput[0])] - 1
+            if playerInputValid(playerInput):
+                row, col = playerInputToGridIndex(playerInput)
 
-                # Checks if the spot is already taken.
-                if grid[r][c].strip() == "":
-                    # The player takes the spot.
-                    grid[r][c] = "X"
+                if not spotTaken(grid, row, col):
+                    grid[row][col] = "X"
                     await channel.send(formattedGrid(grid))
-                    break # Breaks out of the while loop.
+                    return False # False indicates that the game continues.
                 else:
-                    await channel.send("That spot is already taken.")
+                    await channel.send("That spot is already taken. Please choose another spot.")
 
-            # If no break statements are reached, the player is prompted to try again
-            # and another "timeout" seconds are given.
+            else:
+                await channel.send("Invalid input. Please write a letter (a, b, c)" +
+                                    "followed by a number (1, 2, 3). Ex: a1, b2, c3.")
 
         except asyncio.TimeoutError:
             await channel.send("You have taken too long to make a move. The game has ended.")
-            return True  # Indicates that the player ran out of time.
+            return True # True indicates that the player ran out of time.
+
+    # Checks for the validity of the syntax of 'playerInput'.
+    # The syntax should be a letter ('a', 'b', 'c') followed by a number (1, 2, 3).
+    # Ex: a1 b3 c2.
 
 
 def findBestMove(grid):
