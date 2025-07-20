@@ -22,12 +22,21 @@ rows = (1, 2, 3)
 async def startGame(playerName, bot, channel):
     # TODO - Randomize X and O for the player and the bot.
 
+    global playerLetter, botLetter
+
     # The tic tac toe grid that will be edited by the players.
     grid = [["","",""],
             ["","",""],
             ["","",""]]
 
     turn = randint(0, 1) # 0 - player, 1 - bot
+
+    # Player - Bot
+    # X or O - X or O
+    (playerLetter := "X") if randint(0, 1) == 0 else (playerLetter := "O") # 0 - X, 1 - O
+    (botLetter := "X") if playerLetter == "O" else (botLetter := "O")
+
+    await channel.send(f"You are playing with {playerLetter}, and I am playing with {botLetter}.")
 
     await channel.send(formattedGrid(grid))
 
@@ -133,7 +142,7 @@ async def playerTurn(grid, playerName, bot, channel):
                 row, col = playerInputToGridIndex(playerInput)
 
                 if not spotTaken(grid, row, col):
-                    grid[row][col] = "X"
+                    grid[row][col] = playerLetter # The player takes the spot.
                     await channel.send(formattedGrid(grid))
                     return False # False indicates that the game continues.
                 else:
@@ -154,11 +163,25 @@ async def playerTurn(grid, playerName, bot, channel):
 
 def findBestMove(grid):
     """Finds the best move for the bot. UNIMPLEMENTED."""
-    return grid
+    return None, None # Returns a tuple of (row, column) for the best move.
 
 # The bot's turn.
 async def botTurn(grid, channel):
-    await channel.send(formattedGrid(findBestMove(grid)))
-    await channel.send("Note: The bot's turn is not yet implemented.")
+    bestRow, bestCol = findBestMove(grid)
+    try:
+        grid[bestRow][bestCol] = botLetter # The bot takes the spot.
+    except:
+        exitOuterLoop = False
+        for row in range(3):
+            for col in range(3):
+                if grid[row][col] == "":
+                    grid[row][col] = botLetter
+                    exitOuterLoop = True
+                    break
+            if exitOuterLoop:
+                break
+
+        await channel.send(formattedGrid(grid))
+        await channel.send("Note: The bot's turn is not yet implemented properly.")
 
     # TODO - Implement the bot's turn using findBestMove.
