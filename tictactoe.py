@@ -28,7 +28,7 @@ def gridFull(grid: list[list[str]])-> bool:
                 return False
     return True
 
-async def startGame(playerName: User, bot: Client, channel)-> None:
+async def startGame(playerUser: User, bot: Client, channel)-> None:
     # TODO - Randomize X and O for the player and the bot.
 
     global playerLetter, botLetter
@@ -57,12 +57,12 @@ async def startGame(playerName: User, bot: Client, channel)-> None:
     # Game loop.
     while not gridFull(grid):
         if turn == 0:
-            await channel.send(f"Your turn, {playerName}.")
-            ranOutOfTime = await playerTurn(grid, playerName, bot, channel)
+            await channel.send(f"Your turn, {playerUser}.")
+            ranOutOfTime = await playerTurn(grid, playerUser, bot, channel)
             if ranOutOfTime:
                 return
             if gameWon(grid):
-                await printWinner(playerName)
+                await printWinner(playerUser)
                 return
             turn = 1
         else:
@@ -116,10 +116,10 @@ def gameWon(grid: list[list[str]])-> bool:
     
     return False
 
-async def playerTurn(grid: list[list[str]], playerName: User, bot: Client, channel):
+async def playerTurn(grid: list[list[str]], PlayerUser: User, bot: Client, channel)-> bool:
     def check(m)-> bool:
         """Checks if the message sent is from the player who started the game."""
-        return m.author == playerName and m.channel == channel
+        return m.author == PlayerUser and m.channel == channel
     
     def playerInputValid(playerInput: str)-> bool:
         """Checks if the input is valid."""
