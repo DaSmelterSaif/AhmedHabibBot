@@ -9,13 +9,13 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 @client.event
-async def on_ready():
+async def on_ready()-> None:
     print(f"Logged on as {client.user}")
         
 @client.event
-async def on_message(message):
+async def on_message(message: discord.Message)-> None:
 
-    user_msg = message.content
+    user_msg: str = message.content
     
     print(f"Message from {message.author}: {user_msg}")
         

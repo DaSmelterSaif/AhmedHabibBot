@@ -3,10 +3,11 @@ import asyncio
 from configparser import ConfigParser
 import os
 import copy
+from discord import User, Message, Client
 
 # ConfigParser.
-config = ConfigParser()
-config_path = os.path.join(os.path.dirname(__file__), 'tictactoe.ini')
+config: ConfigParser = ConfigParser()
+config_path: str = os.path.join(os.path.dirname(__file__), 'tictactoe.ini')
 config.read(config_path)
 
 # Get all tictactoe settings.
@@ -16,10 +17,18 @@ except:
     print("Error parsing config file.")
 
 # Tuples used for checking input validity.
-columns = ('a', 'b', 'c')
-rows = (1, 2, 3)
+columns: tuple = ('a', 'b', 'c')
+rows: tuple = (1, 2, 3)
 
-async def startGame(playerName, bot, channel):
+def gridFull(grid: list[list[str]])-> bool:
+    """Checks if the grid is full."""
+    for row in range(3):
+        for col in range(3):
+            if grid[row][col] == "":
+                return False
+    return True
+
+async def startGame(playerName: User, bot: Client, channel)-> None:
     # TODO - Randomize X and O for the player and the bot.
 
     global playerLetter, botLetter
@@ -40,13 +49,13 @@ async def startGame(playerName, bot, channel):
 
     await channel.send(formattedGrid(grid))
 
-    async def printWinner(winner):
+    async def printWinner(winner: str)-> None:
         """Prints the winner of the game."""
         
         await channel.send(f"{winner} has won the game! The game has ended.")
 
     # Game loop.
-    for turnCount in range(9):
+    while not gridFull(grid):
         if turn == 0:
             await channel.send(f"Your turn, {playerName}.")
             ranOutOfTime = await playerTurn(grid, playerName, bot, channel)
@@ -63,12 +72,11 @@ async def startGame(playerName, bot, channel):
                 await printWinner("The bot")
                 return
             turn = 0
+    else:
+        await channel.send("It's a draw! The game has ended.")
+        return
 
-        if turnCount == 8:
-            await channel.send("It's a draw! The game has ended.")
-            return
-
-def formattedGrid(g):
+def formattedGrid(g: list[list[str]])-> str:
     """Formats the grid for display in Discord."""
     g_copy = copy.deepcopy(g)
     # Adds spaces " " to empty spots on the grid.
@@ -84,7 +92,7 @@ def formattedGrid(g):
     f"1 {g_copy[2][0]}|{g_copy[2][1]}|{g_copy[2][2]}\n"\
     "  a b c```"
 
-def gameWon(grid):
+def gameWon(grid: list[list[str]])-> bool:
     """Checks if the game is won by either player."""
     
     # Check rows
@@ -108,12 +116,12 @@ def gameWon(grid):
     
     return False
 
-async def playerTurn(grid, playerName, bot, channel):
-    def check(m):
+async def playerTurn(grid: list[list[str]], playerName: User, bot: Client, channel):
+    def check(m)-> bool:
         """Checks if the message sent is from the player who started the game."""
         return m.author == playerName and m.channel == channel
     
-    def playerInputValid(playerInput):
+    def playerInputValid(playerInput: str)-> bool:
         """Checks if the input is valid."""
         if len(playerInput) != 2 or playerInput[0] not in columns or int(playerInput[1]) not in rows:
             return False

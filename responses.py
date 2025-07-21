@@ -10,7 +10,7 @@ def handle_response(message) -> str:
         return "no"
     elif p_message == "please":
         return "no"
-    elif p_message == "math": # Requested by Sammer
+    elif p_message == "math": # Requested by Samer
         return "I love Sammi."
     else:
         return ""
