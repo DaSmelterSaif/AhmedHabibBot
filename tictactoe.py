@@ -4,6 +4,7 @@ from configparser import ConfigParser
 import os
 import copy
 from discord import User, Message, Client
+import math
 
 # ConfigParser.
 config: ConfigParser = ConfigParser()
@@ -27,6 +28,10 @@ def gridFull(grid: list[list[str]])-> bool:
             if grid[row][col] == "":
                 return False
     return True
+
+def cellFull(grid: list[list[str]], row: int, col: int)-> bool:
+    """Checks if a cell in the grid is full."""
+    return grid[row][col] != ""
 
 async def startGame(playerUser: User, bot: Client, channel)-> None:
     # TODO - Randomize X and O for the player and the bot.
@@ -168,16 +173,64 @@ async def playerTurn(grid: list[list[str]], PlayerUser: User, bot: Client, chann
     # The syntax should be a letter ('a', 'b', 'c') followed by a number (1, 2, 3).
     # Ex: a1 b3 c2.
 
+def minimax(grid: list[list[str]], isMaximizing: bool)-> tuple[int, tuple[int, int]]:
+    """Evaluates the score of the grid."""
+    # If isMaximizing is true, that implies that the previous
+    # turn was the player's (isMaximizing=false), since minimax is called
+    # reversing the boolean.
+    if gameWon(grid) and isMaximizing:
+        return -1, None
+    elif gameWon(grid) and not isMaximizing:
+        return 1, None
+    elif gridFull(grid):
+        return 0, None
+    
+    # If the game is not over, then we need a copy of the grid
+    # to continue evaluating the grid.
+    grid_next = copy.deepcopy(grid)
 
-def findBestMove(grid):
+    best_move: tuple[int, int] = None
+
+    # If the game is not over, continue evaluating the grid.
+    if isMaximizing: # Bot's turn.
+        best = -math.inf
+        # For each empty cell in the grid...
+        for row in range(3):
+            for col in range(3):
+                if not cellFull(grid, row, col):
+                    grid_next[row][col] = botLetter
+                    score, _ = minimax(grid_next, False) # -1, 0, or 1.
+                    grid_next[row][col] = ""  # Reset the cell after evaluating.
+                    if score > best:
+                        best_move = (row, col)
+                        best = score
+        return best, best_move
+    else: # Player's turn.
+        best = math.inf
+        # For each empty cell in the grid...
+        for row in range(3):
+            for col in range(3):
+                if not cellFull(grid, row, col):
+                    grid_next[row][col] = playerLetter
+                    score, _ = minimax(grid_next, True) # -1, 0, or 1.
+                    grid_next[row][col] = "" # Reset the cell after evaluating.
+                    if score < best:
+                        best_move = (row, col)
+                        best = score
+        return best, best_move
+
+def findBestMove(grid: list[list[str]])-> tuple[int, int]:
     """Finds the best move for the bot. UNIMPLEMENTED."""
-    return None, None # Returns a tuple of (row, column) for the best move.
+    best_move: tuple[int, int] = minimax(grid, True)[1]
+
+    return best_move # Returns a tuple of (row, column) for the best move.
 
 # The bot's turn.
-async def botTurn(grid, channel):
+async def botTurn(grid, channel)-> None:
     bestRow, bestCol = findBestMove(grid)
     try:
         grid[bestRow][bestCol] = botLetter # The bot takes the spot.
+        await channel.send(formattedGrid(grid))
     except:
         exitOuterLoop = False
         for row in range(3):
