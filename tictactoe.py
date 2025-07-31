@@ -56,8 +56,16 @@ async def startGame(playerUser: User, bot: Client, channel)-> None:
 
     async def printWinner(winner: str)-> None:
         """Prints the winner of the game."""
+
+        mention_saif = "<@434032544116113410>"
+
+        winner_str = ("I win. L + Ratio. Cope harder. The game has ended." 
+                      if winner == "The bot" 
+                      else ("You win... Wait, this should never happen. HOW! "
+                             + mention_saif 
+                             + " HELP!! The game has ended."))
         
-        await channel.send(f"{winner} has won the game! The game has ended.")
+        await channel.send(winner_str)
 
     # Game loop.
     while not gridFull(grid):
@@ -78,7 +86,7 @@ async def startGame(playerUser: User, bot: Client, channel)-> None:
                 return
             turn = 0
     else:
-        await channel.send("It's a draw! The game has ended.")
+        await channel.send("It's a draw! This is the best you'll ever get to defeating me. The game has ended.")
         return
 
 def formattedGrid(g: list[list[str]])-> str:
@@ -108,15 +116,12 @@ def gameWon(grid: list[list[str]])-> bool:
     # Check columns
     for col in range(3):
         if (grid[0][col] == grid[1][col] == grid[2][col]) and grid[0][col] != "":
-            print(2) # Debugging line
             return True
         
     # Check diagonals
     if grid[0][0] == grid[1][1] == grid[2][2] and grid[0][0] != "":
-        print(3)  # Debugging line
         return True
     if grid[0][2] == grid[1][1] == grid[2][0] and grid[0][2] != "":
-        print(4)  # Debugging line
         return True
     
     return False
