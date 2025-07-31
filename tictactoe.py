@@ -3,7 +3,7 @@ import asyncio
 from configparser import ConfigParser
 import os
 import copy
-from discord import User, Message, Client
+from discord import User, Client
 import math
 
 # ConfigParser.
